@@ -58,6 +58,10 @@ indicating which part of the DOM element is visible.
 - `$event` is the DOM event that triggered the check; the DOM element that
 changed its visibility status is passed as `$event.inViewTarget`
 (To use the old `$element` variable use version 1.3.x).
+- `$overflowing` is a boolean indicating that the element that is brought into view 
+is cropped/hidden by overflow settings, e.g., overflow: auto, overflow: hidden.
+Set the tellOverflow to true on in-view-options to get a value from $overflowing.
+
 
 An additional attribute `in-view-options` can be speficied with an object value
 containing:
@@ -69,6 +73,9 @@ offset respectively; this may virtually change the height of the element for inv
 - `debounce`: a number indicating a millisecond value of debounce which will delay
 firing the in-view event until that number of millisecond is passed without a scrolling
 event happening.
+- `tellOverflow`: a boolean indicating to check if the element that is brought into view 
+is cropped/hidden by overflow settings, e.g., overflow: auto, overflow: hidden.
+
 
 ### InViewContainer
 
