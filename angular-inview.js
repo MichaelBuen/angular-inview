@@ -10,17 +10,27 @@
         restrict: 'A',
         require: '?^inViewContainer',
         link: function(scope, element, attrs, containerController) {
-          var inViewFunc, item, options, performCheck, ref, ref1;
+          var inViewFunc, item, options, overflowing, performCheck, ref, ref1;
           if (!attrs.inView) {
             return;
           }
           inViewFunc = $parse(attrs.inView);
+          overflowing = function(el) {
+            var curOverflow, isOverflowing;
+            curOverflow = el.style.overflow;
+            if (!curOverflow || curOverflow === "visible") {
+              el.style.overflow = "hidden";
+            }
+            isOverflowing = el.clientWidth < el.scrollWidth || el.clientHeight < el.scrollHeight;
+            el.style.overflow = curOverflow;
+            return isOverflowing;
+          };
           item = {
             element: element,
             wasInView: false,
             offset: 0,
             customDebouncedCheck: null,
-            callback: function($event, $inview, $inviewpart) {
+            callback: function($event, $inview, $inviewpart, $tellOverflow) {
               if ($event == null) {
                 $event = {};
               }
@@ -30,7 +40,8 @@
                   return inViewFunc(scope, {
                     '$event': $event,
                     '$inview': $inview,
-                    '$inviewpart': $inviewpart
+                    '$inviewpart': $inviewpart,
+                    '$overflowing': $tellOverflow && overflowing($event.inViewTarget)
                   });
                 };
               })(this));
@@ -38,6 +49,7 @@
           };
           if ((attrs.inViewOptions != null) && (options = scope.$eval(attrs.inViewOptions))) {
             item.offset = options.offset || [options.offsetTop || 0, options.offsetBottom || 0];
+            item.tellOverflow = options.tellOverflow;
             if (options.debounce) {
               item.customDebouncedCheck = debounce((function(event) {
                 return checkInView([item], element[0], event);
@@ -208,7 +220,7 @@
       if (!(item.wasInView && item.wasInView === inviewpart && elOffsetTop === item.lastOffsetTop)) {
         item.lastOffsetTop = elOffsetTop;
         item.wasInView = inviewpart;
-        return item.callback(event, true, inviewpart);
+        return item.callback(event, true, inviewpart, item.tellOverflow);
       }
     } else if (item.wasInView) {
       item.wasInView = false;

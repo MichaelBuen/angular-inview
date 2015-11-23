@@ -29,6 +29,13 @@ angularInviewModule = angular.module('angular-inview', [])
 		link: (scope, element, attrs, containerController) ->
 			return unless attrs.inView
 			inViewFunc = $parse(attrs.inView)
+			overflowing = (el) ->
+				curOverflow = el.style.overflow			
+				if !curOverflow || curOverflow == "visible" 
+					el.style.overflow = "hidden"			
+				isOverflowing = el.clientWidth < el.scrollWidth || el.clientHeight < el.scrollHeight			
+				el.style.overflow = curOverflow				
+				isOverflowing				
 			item =
 				element: element
 				wasInView: no
@@ -39,17 +46,19 @@ angularInviewModule = angular.module('angular-inview', [])
 				# The inView DOM element will be passed in `$event.inViewTarget`.
 				# - `$inview`: boolean indicating if the element is in view
 				# - `$inviewpart`: string either 'top', 'bottom' or 'both'
-				callback: ($event={}, $inview, $inviewpart) -> scope.$evalAsync =>
+				callback: ($event={}, $inview, $inviewpart, $tellOverflow) -> scope.$evalAsync =>
 					$event.inViewTarget = element[0]
 					inViewFunc scope,
 						'$event': $event
 						'$inview': $inview
 						'$inviewpart': $inviewpart
+						'$overflowing': $tellOverflow && overflowing($event.inViewTarget)
 			# An additional `in-view-options` attribute can be specified to set offsets
 			# that will displace the inView calculation and a debounce to slow down updates
 			# via scrolling events.
 			if attrs.inViewOptions? and options = scope.$eval(attrs.inViewOptions)
 				item.offset = options.offset || [options.offsetTop or 0, options.offsetBottom or 0]
+				item.tellOverflow = options.tellOverflow
 				if options.debounce
 					item.customDebouncedCheck = debounce ((event) -> checkInView [item], element[0], event), options.debounce
 			# A series of checks are set up to verify the status of the element visibility.
@@ -153,7 +162,7 @@ triggerInViewCallback = (event, item, inview, isTopVisible, isBottomVisible) ->
 		unless item.wasInView and item.wasInView == inviewpart and elOffsetTop == item.lastOffsetTop
 			item.lastOffsetTop = elOffsetTop
 			item.wasInView = inviewpart
-			item.callback event, yes, inviewpart
+			item.callback event, yes, inviewpart, item.tellOverflow
 	else if item.wasInView
 		item.wasInView = no
 		item.callback event, no
