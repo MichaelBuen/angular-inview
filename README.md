@@ -89,6 +89,16 @@ trigger callbacks when the container scrolls as well as when the window scrolls.
 </div>
 ```
 
+Tell Overflow Example:
+
+```
+<div class="description"
+    in-view="$inview && yourController.highlight(item, $overflowing)"
+    in-view-options="{tellOverflow: true}">
+    <p>{{::item.description}}</p>
+</div>
+```
+
 ## How to contribute
 
 1. Fork the repository and clone it to your machine
